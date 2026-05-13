@@ -8,17 +8,17 @@ function App() {
   const [uploadMessage, setUploadMessage] = useState('')
 
   const loadData = () => {
-    fetch('http://localhost:5050/health')
+    fetch('https://dmrv-platform-m0g3.onrender.com/health')
       .then((res) => res.json())
       .then((data) => setBackendStatus(data.message))
       .catch(() => setBackendStatus('Backend not connected'))
 
-    fetch('http://localhost:5050/projects')
+    fetch('https://dmrv-platform-m0g3.onrender.com/projects')
       .then((res) => res.json())
       .then((data) => setProjects(data))
       .catch(() => setProjects([]))
 
-    fetch('http://localhost:5050/ledger')
+    fetch('https://dmrv-platform-m0g3.onrender.com/ledger')
       .then((res) => res.json())
       .then((data) => setLedger(data))
       .catch(() => setLedger([]))
@@ -37,7 +37,7 @@ function App() {
     const formData = new FormData()
     formData.append('image', selectedFile)
 
-    const response = await fetch('http://localhost:5050/upload', {
+    const response = await fetch('https://dmrv-platform-m0g3.onrender.com/upload', {
       method: 'POST',
       body: formData
     })
