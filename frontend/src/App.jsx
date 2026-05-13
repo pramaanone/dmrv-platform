@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import jsPDF from 'jspdf'
 
 function App() {
   const [backendStatus, setBackendStatus] = useState('Checking...')
@@ -129,6 +130,37 @@ function App() {
     loadData()
   }
 
+
+  const generatePdfCertificate = (entry) => {
+    const doc = new jsPDF()
+
+    doc.setFontSize(20)
+    doc.text('PramaanOne Digital Audit Certificate', 20, 20)
+
+    doc.setFontSize(12)
+    doc.text('Certificate Type: dMRV Audit Verification', 20, 35)
+    doc.text('Status: Verified & Tamper-Proof Record', 20, 45)
+    doc.text(`Record ID: ${entry.id}`, 20, 60)
+    doc.text(`File Name: ${entry.fileName}`, 20, 70)
+    doc.text(`Azure ACL Status: ${entry.azureAclStatus || 'Not Sent'}`, 20, 80)
+    doc.text(`Timestamp: ${new Date(entry.timestamp).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })} IST`, 20, 90)
+
+    doc.text('SHA256 Hash:', 20, 105)
+    const hashLines = doc.splitTextToSize(entry.hash || 'N/A', 170)
+    doc.text(hashLines, 20, 115)
+
+    doc.text('Digital Signature:', 20, 145)
+    doc.text('Signed by PramaanOne dMRV Verification Engine', 20, 155)
+    doc.text('Signature Mode: Demo Digital Signature', 20, 165)
+
+    if (entry.qrCode) {
+      doc.text('QR Verification:', 20, 185)
+      doc.addImage(entry.qrCode, 'PNG', 20, 190, 45, 45)
+    }
+
+    doc.save(`PramaanOne-Certificate-${entry.id}.pdf`)
+  }
+
   const cardStyle = {
     marginTop: '25px',
     padding: '24px',
@@ -177,9 +209,15 @@ function App() {
               <p><strong>Hash:</strong> {entry.hash}</p>
               <p><strong>Timestamp:</strong> {new Date(entry.timestamp).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })} IST</p>
 
-              <button onClick={() => window.print()} style={buttonStyle}>
-                Download / Print Certificate
-              </button>
+              <div style={{ display: 'flex', gap: '12px', marginTop: '15px', flexWrap: 'wrap' }}>
+                <button onClick={() => generatePdfCertificate(entry)} style={buttonStyle}>
+                  Download Signed PDF Certificate
+                </button>
+
+                <button onClick={() => window.print()} style={buttonStyle}>
+                  Print Certificate
+                </button>
+              </div>
 
               {entry.imageUrl && (
                 <img
