@@ -4,6 +4,7 @@ function App() {
   const [backendStatus, setBackendStatus] = useState('Checking...')
   const [projects, setProjects] = useState([])
   const [ledger, setLedger] = useState([])
+  const [iotReadings, setIotReadings] = useState([])
   const [selectedFile, setSelectedFile] = useState(null)
   const [uploadMessage, setUploadMessage] = useState('')
 
@@ -53,6 +54,11 @@ function App() {
       .then((res) => res.json())
       .then((data) => setLedger(data))
       .catch(() => setLedger([]))
+
+    fetch('http://localhost:5050/iot/readings')
+      .then((res) => res.json())
+      .then((data) => setIotReadings(data))
+      .catch(() => setIotReadings([]))
   }
 
   useEffect(() => {
@@ -100,6 +106,26 @@ function App() {
 
     const data = await response.json()
     setUploadMessage(data.message)
+    loadData()
+  }
+
+  const simulateIotReading = async () => {
+    const sampleReading = {
+      projectId: 1,
+      meterId: 'MTR-VIZAG-001',
+      parameter: 'Electricity Consumption',
+      value: Number((1200 + Math.random() * 100).toFixed(2)),
+      unit: 'kWh',
+      location: 'Vizag Factory'
+    }
+
+    const response = await fetch('http://localhost:5050/iot/readings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(sampleReading)
+    })
+
+    await response.json()
     loadData()
   }
 
@@ -299,6 +325,11 @@ function App() {
         </div>
 
         <div style={cardStyle}>
+          <h3>IoT Meter Readings</h3>
+          <h1>{iotReadings.length}</h1>
+        </div>
+
+        <div style={cardStyle}>
           <h3>Backend Status</h3>
           <p style={{ color: backendStatus.includes('not') ? '#dc2626' : '#16a34a', fontWeight: '700' }}>
             {backendStatus}
@@ -322,6 +353,43 @@ function App() {
         </button>
 
         <p>{uploadMessage}</p>
+      </div>
+
+      <div style={cardStyle}>
+        <h2>IoT Meter Readings</h2>
+
+        <button onClick={simulateIotReading} style={buttonStyle}>
+          Simulate IoT Meter Reading
+        </button>
+
+        {iotReadings.length === 0 ? (
+          <p>No IoT readings received yet.</p>
+        ) : (
+          <div style={{ marginTop: '18px', overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ backgroundColor: '#f1f5f9' }}>
+                  <th style={{ padding: '10px', border: '1px solid #e2e8f0', textAlign: 'left' }}>Meter ID</th>
+                  <th style={{ padding: '10px', border: '1px solid #e2e8f0', textAlign: 'left' }}>Parameter</th>
+                  <th style={{ padding: '10px', border: '1px solid #e2e8f0', textAlign: 'left' }}>Value</th>
+                  <th style={{ padding: '10px', border: '1px solid #e2e8f0', textAlign: 'left' }}>Location</th>
+                  <th style={{ padding: '10px', border: '1px solid #e2e8f0', textAlign: 'left' }}>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {iotReadings.map((reading) => (
+                  <tr key={reading.id}>
+                    <td style={{ padding: '10px', border: '1px solid #e2e8f0' }}>{reading.meterId}</td>
+                    <td style={{ padding: '10px', border: '1px solid #e2e8f0' }}>{reading.parameter}</td>
+                    <td style={{ padding: '10px', border: '1px solid #e2e8f0' }}>{reading.value} {reading.unit}</td>
+                    <td style={{ padding: '10px', border: '1px solid #e2e8f0' }}>{reading.location}</td>
+                    <td style={{ padding: '10px', border: '1px solid #e2e8f0' }}>{reading.status}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       <div style={cardStyle}>
