@@ -457,7 +457,7 @@ function App() {
           <div>
             <span style={badgeStyle('#dcfce7', '#166534')}>Audit Ready</span>
             <span style={badgeStyle('#dbeafe', '#1e40af')}>Azure ACL Backed</span>
-            <span style={badgeStyle('#fef3c7', '#92400e')}>IoT Enabled</span>
+            <span style={badgeStyle('#fef3c7', '#92400e')}>Edge Gateway Enabled</span>
             <span style={badgeStyle('#ede9fe', '#5b21b6')}>PDF Certificate</span>
           </div>
         </div>
