@@ -551,7 +551,7 @@ function App() {
         </button>
 
         {iotReadings.length === 0 ? (
-          <p>No IoT readings received yet.</p>
+          <p>No Edge Gateway readings received yet.</p>
         ) : (
           <div style={{ marginTop: '18px', overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
