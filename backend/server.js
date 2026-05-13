@@ -180,16 +180,68 @@ app.post('/iot/readings', (req, res) => {
     })
   }
 
+  const nextId = iotReadings.length + 1
+  const timestamp = new Date()
+  const verificationUrl = `${frontendBaseUrl}/iot-report/${nextId}`
+
+  const iotHash = crypto
+    .createHash('sha256')
+    .update(JSON.stringify({
+      projectId: projectId || 1,
+      meterId,
+      parameter,
+      value,
+      unit,
+      location: location || 'Vizag, Andhra Pradesh',
+      timestamp
+    }))
+    .digest('hex')
+
+  const qrCode = await QRCode.toDataURL(verificationUrl)
+
   const reading = {
-    id: iotReadings.length + 1,
+    id: nextId,
     projectId: projectId || 1,
     meterId,
     parameter,
     value,
     unit,
     location: location || 'Vizag, Andhra Pradesh',
-    timestamp: new Date(),
-    status: 'Received'
+    timestamp,
+    status: 'Received',
+    hash: iotHash,
+    verificationUrl,
+    qrCode
+  }
+
+  try {
+    const aclResult = await writeAuditToACL({
+      project: 'Demo Factory dMRV Project',
+      recordType: 'IoT Meter Reading',
+      meterId: reading.meterId,
+      parameter: reading.parameter,
+      value: reading.value,
+      unit: reading.unit,
+      location: reading.location,
+      readingHash: reading.hash,
+      timestamp: reading.timestamp,
+      verificationUrl: reading.verificationUrl
+    })
+
+    reading.azureAclResponse = aclResult.body
+
+    if (aclResult.body && aclResult.body.error) {
+      reading.azureAclStatus = 'Failed'
+      reading.azureAclError = aclResult.body.error.message || 'Azure ACL write failed'
+    } else {
+      reading.azureAclStatus = 'Stored'
+    }
+  } catch (error) {
+    console.error('AZURE ACL IOT ERROR:')
+    console.error(error)
+
+    reading.azureAclStatus = 'Failed'
+    reading.azureAclError = error.message
   }
 
   iotReadings.push(reading)
