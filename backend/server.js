@@ -5,6 +5,7 @@ const crypto = require('crypto')
 const path = require('path')
 const fs = require('fs')
 const QRCode = require('qrcode')
+const { writeAuditToACL } = require('./aclClient')
 
 const app = express()
 
@@ -100,6 +101,25 @@ app.post('/upload', upload.single('image'), async (req, res) => {
     status: 'Verified',
     verificationUrl,
     qrCode
+  }
+
+  try {
+    const aclResult = await writeAuditToACL({
+      project: 'Demo Factory dMRV Project',
+      recordType: 'Satellite Image Hash',
+      fileName: auditEntry.fileName,
+      imageHash: auditEntry.hash,
+      location: 'Vizag, Andhra Pradesh',
+      timestamp: auditEntry.timestamp,
+      verificationUrl: auditEntry.verificationUrl
+    })
+
+    auditEntry.azureAclStatus = 'Stored'
+    auditEntry.azureAclResponse = aclResult.body
+
+  } catch (error) {
+    auditEntry.azureAclStatus = 'Failed'
+    auditEntry.azureAclError = error.message
   }
 
   auditLedger.push(auditEntry)
