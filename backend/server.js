@@ -166,7 +166,9 @@ app.get('/iot/readings', (req, res) => {
 app.post('/iot/readings', async (req, res) => {
   const {
     projectId,
+    edgeGatewayId,
     meterId,
+    protocol,
     parameter,
     value,
     unit,
@@ -188,11 +190,13 @@ app.post('/iot/readings', async (req, res) => {
     .createHash('sha256')
     .update(JSON.stringify({
       projectId: projectId || 1,
+      edgeGatewayId: edgeGatewayId || 'EDGE-GNT-001',
       meterId,
+      protocol: protocol || 'Modbus RTU over RS485',
       parameter,
       value,
       unit,
-      location: location || 'Vizag, Andhra Pradesh',
+      location: location || 'Guntur Spinning Mills, Guntur',
       timestamp
     }))
     .digest('hex')
@@ -202,13 +206,17 @@ app.post('/iot/readings', async (req, res) => {
   const reading = {
     id: nextId,
     projectId: projectId || 1,
+    edgeGatewayId: edgeGatewayId || 'EDGE-GNT-001',
     meterId,
+    protocol: protocol || 'Modbus RTU over RS485',
     parameter,
     value,
     unit,
-    location: location || 'Vizag, Andhra Pradesh',
+    location: location || 'Guntur Spinning Mills, Guntur',
     timestamp,
     status: 'Received',
+    edgeStatus: 'Validated at Edge',
+    syncStatus: 'Sent to Cloud',
     hash: iotHash,
     verificationUrl,
     qrCode
@@ -218,7 +226,11 @@ app.post('/iot/readings', async (req, res) => {
     const aclResult = await writeAuditToACL({
       project: 'Demo Factory dMRV Project',
       recordType: 'IoT Meter Reading',
+      edgeGatewayId: reading.edgeGatewayId,
       meterId: reading.meterId,
+      protocol: reading.protocol,
+      edgeStatus: reading.edgeStatus,
+      syncStatus: reading.syncStatus,
       parameter: reading.parameter,
       value: reading.value,
       unit: reading.unit,
