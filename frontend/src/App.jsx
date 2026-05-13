@@ -7,6 +7,37 @@ function App() {
   const [selectedFile, setSelectedFile] = useState(null)
   const [uploadMessage, setUploadMessage] = useState('')
 
+  const [loginEmail, setLoginEmail] = useState('')
+  const [loginPassword, setLoginPassword] = useState('')
+  const [loginError, setLoginError] = useState('')
+  const [currentUser, setCurrentUser] = useState(() => {
+    const savedUser = localStorage.getItem('pramaanoneUser')
+    return savedUser ? JSON.parse(savedUser) : null
+  })
+
+  const demoUsers = [
+    {
+      email: 'admin@pramaanone.com',
+      password: 'admin123',
+      role: 'Platform Admin'
+    },
+    {
+      email: 'contact@pramaanone.com',
+      password: 'audit123',
+      role: 'Auditor'
+    },
+    {
+      email: 'support@pramaanone.com',
+      password: 'factory123',
+      role: 'Factory Operator'
+    },
+    {
+      email: 'info@pramaanone.com',
+      password: 'info123',
+      role: 'Compliance Viewer'
+    }
+  ]
+
   const loadData = () => {
     fetch('https://dmrv-platform-m0g3.onrender.com/health')
       .then((res) => res.json())
@@ -28,6 +59,31 @@ function App() {
     loadData()
   }, [])
 
+  const handleLogin = () => {
+    const user = demoUsers.find(
+      (item) =>
+        item.email.toLowerCase() === loginEmail.toLowerCase().trim() &&
+        item.password === loginPassword
+    )
+
+    if (!user) {
+      setLoginError('Invalid email or password.')
+      return
+    }
+
+    setCurrentUser(user)
+    localStorage.setItem('pramaanoneUser', JSON.stringify(user))
+    setLoginError('')
+  }
+
+  const handleLogout = () => {
+    localStorage.removeItem('pramaanoneUser')
+    localStorage.removeItem('dmrvUser')
+    setCurrentUser(null)
+    setLoginEmail('')
+    setLoginPassword('')
+  }
+
   const uploadImage = async () => {
     if (!selectedFile) {
       setUploadMessage('Please select a satellite image first')
@@ -47,6 +103,24 @@ function App() {
     loadData()
   }
 
+  const cardStyle = {
+    marginTop: '25px',
+    padding: '24px',
+    backgroundColor: 'white',
+    borderRadius: '16px',
+    boxShadow: '0 8px 30px rgba(15, 23, 42, 0.08)',
+    border: '1px solid #e2e8f0'
+  }
+
+  const buttonStyle = {
+    padding: '11px 18px',
+    backgroundColor: '#0f172a',
+    color: 'white',
+    border: 'none',
+    borderRadius: '10px',
+    cursor: 'pointer',
+    fontWeight: '600'
+  }
 
   const path = window.location.pathname
   const verifyMatch = path.match(/\/verify\/(\d+)/)
@@ -62,13 +136,8 @@ function App() {
         backgroundColor: '#f4f7fa',
         minHeight: '100vh'
       }}>
-        <div style={{
-          padding: '25px',
-          backgroundColor: 'white',
-          borderRadius: '10px',
-          boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
-        }}>
-          <h1>dMRV Digital Audit Certificate</h1>
+        <div style={cardStyle}>
+          <h1>PramaanOne Digital Audit Certificate</h1>
 
           {!entry ? (
             <p>Loading or record not found...</p>
@@ -82,18 +151,7 @@ function App() {
               <p><strong>Hash:</strong> {entry.hash}</p>
               <p><strong>Timestamp:</strong> {new Date(entry.timestamp).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })} IST</p>
 
-              <button
-                onClick={() => window.print()}
-                style={{
-                  marginTop: '15px',
-                  padding: '10px 16px',
-                  backgroundColor: '#0f172a',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '6px',
-                  cursor: 'pointer'
-                }}
-              >
+              <button onClick={() => window.print()} style={buttonStyle}>
                 Download / Print Certificate
               </button>
 
@@ -104,14 +162,86 @@ function App() {
                   style={{
                     width: '100%',
                     maxWidth: '700px',
-                    borderRadius: '8px',
-                    marginTop: '15px',
+                    borderRadius: '12px',
+                    marginTop: '20px',
                     border: '1px solid #cbd5e1'
                   }}
                 />
               )}
             </>
           )}
+        </div>
+      </div>
+    )
+  }
+
+  if (!currentUser) {
+    return (
+      <div style={{
+        fontFamily: 'Arial',
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #0f172a, #164e63)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '30px'
+      }}>
+        <div style={{
+          width: '100%',
+          maxWidth: '460px',
+          backgroundColor: 'white',
+          borderRadius: '22px',
+          padding: '32px',
+          boxShadow: '0 20px 60px rgba(0,0,0,0.25)'
+        }}>
+          <h1 style={{ marginBottom: '8px', color: '#0f172a' }}>
+            PramaanOne Secure Login
+          </h1>
+
+          <p style={{ color: '#475569', marginBottom: '24px' }}>
+            Digital MRV platform with role-based access for audit, factory and compliance users.
+          </p>
+
+          <label>Email</label>
+          <input
+            value={loginEmail}
+            onChange={(e) => setLoginEmail(e.target.value)}
+            placeholder="Enter email"
+            style={{
+              width: '100%',
+              padding: '12px',
+              marginTop: '6px',
+              marginBottom: '14px',
+              borderRadius: '10px',
+              border: '1px solid #cbd5e1',
+              fontSize: '15px'
+            }}
+          />
+
+          <label>Password</label>
+          <input
+            type="password"
+            value={loginPassword}
+            onChange={(e) => setLoginPassword(e.target.value)}
+            placeholder="Enter password"
+            style={{
+              width: '100%',
+              padding: '12px',
+              marginTop: '6px',
+              marginBottom: '14px',
+              borderRadius: '10px',
+              border: '1px solid #cbd5e1',
+              fontSize: '15px'
+            }}
+          />
+
+          {loginError && (
+            <p style={{ color: '#dc2626', fontWeight: '600' }}>{loginError}</p>
+          )}
+
+          <button onClick={handleLogin} style={{ ...buttonStyle, width: '100%' }}>
+            Login to PramaanOne Platform
+          </button>
         </div>
       </div>
     )
@@ -124,35 +254,59 @@ function App() {
       backgroundColor: '#f4f7fa',
       minHeight: '100vh'
     }}>
-      <h1 style={{ color: '#0f172a', fontSize: '42px' }}>
-        dMRV Platform
-      </h1>
-
-      <p style={{ color: '#334155', fontSize: '20px' }}>
-        Digital Monitoring, Reporting & Verification
-      </p>
-
       <div style={{
-        marginTop: '40px',
-        padding: '20px',
-        backgroundColor: 'white',
-        borderRadius: '10px',
-        boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        gap: '20px'
       }}>
-        <h2>Project Dashboard</h2>
-        <p>Total Projects: {projects.length}</p>
-        <p>Audit Records: {ledger.length}</p>
-        <p>Satellite Images: {ledger.length}</p>
-        <p><strong>Backend Status:</strong> {backendStatus}</p>
+        <div>
+          <h1 style={{ color: '#0f172a', fontSize: '42px', marginBottom: '8px' }}>
+            PramaanOne dMRV Platform
+          </h1>
+
+          <p style={{ color: '#334155', fontSize: '20px', marginTop: 0 }}>
+            Digital Monitoring, Reporting & Verification
+          </p>
+        </div>
+
+        <div style={{ textAlign: 'right' }}>
+          <p style={{ margin: 0 }}><strong>{currentUser.role}</strong></p>
+          <p style={{ marginTop: '4px', color: '#64748b' }}>{currentUser.email}</p>
+          <button onClick={handleLogout} style={buttonStyle}>Logout</button>
+        </div>
       </div>
 
       <div style={{
-        marginTop: '25px',
-        padding: '20px',
-        backgroundColor: 'white',
-        borderRadius: '10px',
-        boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+        gap: '18px',
+        marginTop: '35px'
       }}>
+        <div style={cardStyle}>
+          <h3>Total Projects</h3>
+          <h1>{projects.length}</h1>
+        </div>
+
+        <div style={cardStyle}>
+          <h3>Audit Records</h3>
+          <h1>{ledger.length}</h1>
+        </div>
+
+        <div style={cardStyle}>
+          <h3>Satellite Images</h3>
+          <h1>{ledger.length}</h1>
+        </div>
+
+        <div style={cardStyle}>
+          <h3>Backend Status</h3>
+          <p style={{ color: backendStatus.includes('not') ? '#dc2626' : '#16a34a', fontWeight: '700' }}>
+            {backendStatus}
+          </p>
+        </div>
+      </div>
+
+      <div style={cardStyle}>
         <h2>Satellite Image Upload</h2>
 
         <input
@@ -163,85 +317,89 @@ function App() {
 
         <br /><br />
 
-        <button onClick={uploadImage}>
+        <button onClick={uploadImage} style={buttonStyle}>
           Upload Satellite Image
         </button>
 
         <p>{uploadMessage}</p>
       </div>
 
-      <div style={{
-        marginTop: '25px',
-        padding: '20px',
-        backgroundColor: 'white',
-        borderRadius: '10px',
-        boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
-      }}>
+      <div style={cardStyle}>
         <h2>Immutable Audit Ledger</h2>
 
-        {ledger.map((entry) => (
-          <div key={entry.id} style={{
-            padding: '15px',
-            border: '1px solid #e2e8f0',
-            borderRadius: '8px',
-            marginTop: '10px',
-            wordBreak: 'break-all'
-          }}>
-            <p><strong>ID:</strong> {entry.id}</p>
-            <p><strong>File:</strong> {entry.fileName}</p>
-            {entry.imageUrl && (
-              <img
-                src={entry.imageUrl}
-                alt="Satellite Upload"
-                style={{
-                  width: '100%',
-                  maxWidth: '500px',
-                  borderRadius: '8px',
-                  marginTop: '10px',
-                  border: '1px solid #cbd5e1'
-                }}
-              />
-            )}
-            <p><strong>Hash:</strong> {entry.hash}</p>
-            <p><strong>Timestamp:</strong> {new Date(entry.timestamp).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })} IST</p>
-            <p><strong>Status:</strong> {entry.status}</p>
-            <p><strong>Azure ACL:</strong> {entry.azureAclStatus || 'Not Sent'}</p>
+        {ledger.length === 0 ? (
+          <p>No ledger records found yet.</p>
+        ) : (
+          ledger.map((entry) => (
+            <div key={entry.id} style={{
+              padding: '18px',
+              border: '1px solid #e2e8f0',
+              borderRadius: '14px',
+              marginTop: '14px',
+              wordBreak: 'break-all',
+              backgroundColor: '#f8fafc'
+            }}>
+              <p><strong>ID:</strong> {entry.id}</p>
+              <p><strong>File:</strong> {entry.fileName}</p>
 
-            {entry.qrCode && (
-              <div style={{ marginTop: '15px' }}>
-                <p><strong>QR Verification:</strong></p>
+              {entry.imageUrl && (
                 <img
-                  src={entry.qrCode}
-                  alt="QR Verification"
+                  src={entry.imageUrl}
+                  alt="Satellite Upload"
                   style={{
-                    width: '140px',
-                    height: '140px',
-                    border: '1px solid #cbd5e1',
-                    padding: '8px',
-                    borderRadius: '8px'
+                    width: '100%',
+                    maxWidth: '500px',
+                    borderRadius: '12px',
+                    marginTop: '10px',
+                    border: '1px solid #cbd5e1'
                   }}
                 />
-              </div>
-            )}
-          </div>
-        ))}
+              )}
+
+              <p><strong>Hash:</strong> {entry.hash}</p>
+              <p><strong>Timestamp:</strong> {new Date(entry.timestamp).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })} IST</p>
+              <p><strong>Status:</strong> {entry.status}</p>
+              <p><strong>Azure ACL:</strong> {entry.azureAclStatus || 'Not Sent'}</p>
+
+              <button
+                onClick={() => window.open(`/verify/${entry.id}`, '_blank')}
+                style={buttonStyle}
+              >
+                Open Certificate
+              </button>
+
+              {entry.qrCode && (
+                <div style={{ marginTop: '15px' }}>
+                  <p><strong>QR Verification:</strong></p>
+                  <img
+                    src={entry.qrCode}
+                    alt="QR Verification"
+                    style={{
+                      width: '140px',
+                      height: '140px',
+                      border: '1px solid #cbd5e1',
+                      padding: '8px',
+                      borderRadius: '10px',
+                      backgroundColor: 'white'
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+          ))
+        )}
       </div>
 
-      <div style={{
-        marginTop: '25px',
-        padding: '20px',
-        backgroundColor: 'white',
-        borderRadius: '10px',
-        boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
-      }}>
+      <div style={cardStyle}>
         <h2>Registered Projects</h2>
 
         {projects.map((project) => (
           <div key={project.id} style={{
-            padding: '15px',
+            padding: '16px',
             border: '1px solid #e2e8f0',
-            borderRadius: '8px',
-            marginTop: '10px'
+            borderRadius: '14px',
+            marginTop: '12px',
+            backgroundColor: '#f8fafc'
           }}>
             <h3>{project.name}</h3>
             <p><strong>Location:</strong> {project.location}</p>
