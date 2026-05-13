@@ -161,6 +161,40 @@ function App() {
     doc.save(`PramaanOne-Certificate-${entry.id}.pdf`)
   }
 
+
+  const generateIotPdfCertificate = (reading) => {
+    const doc = new jsPDF()
+
+    doc.setFontSize(20)
+    doc.text('PramaanOne IoT Audit Report', 20, 20)
+
+    doc.setFontSize(12)
+    doc.text('Report Type: IoT Meter Reading Verification', 20, 35)
+    doc.text(`Reading ID: ${reading.id}`, 20, 50)
+    doc.text(`Meter ID: ${reading.meterId}`, 20, 60)
+    doc.text(`Parameter: ${reading.parameter}`, 20, 70)
+    doc.text(`Value: ${reading.value} ${reading.unit}`, 20, 80)
+    doc.text(`Location: ${reading.location}`, 20, 90)
+    doc.text(`Status: ${reading.status}`, 20, 100)
+    doc.text(`Azure ACL Status: ${reading.azureAclStatus || 'Not Sent'}`, 20, 110)
+    doc.text(`Timestamp: ${new Date(reading.timestamp).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })} IST`, 20, 120)
+
+    doc.text('IoT Reading SHA256 Hash:', 20, 135)
+    const hashLines = doc.splitTextToSize(reading.hash || 'N/A', 170)
+    doc.text(hashLines, 20, 145)
+
+    doc.text('Digital Signature:', 20, 175)
+    doc.text('Signed by PramaanOne IoT Verification Engine', 20, 185)
+    doc.text('Signature Mode: Demo Digital Signature', 20, 195)
+
+    if (reading.qrCode) {
+      doc.text('QR Verification:', 20, 215)
+      doc.addImage(reading.qrCode, 'PNG', 20, 220, 45, 45)
+    }
+
+    doc.save(`PramaanOne-IoT-Report-${reading.id}.pdf`)
+  }
+
   const cardStyle = {
     marginTop: '25px',
     padding: '24px',
@@ -195,6 +229,72 @@ function App() {
 
   const path = window.location.pathname
   const verifyMatch = path.match(/\/verify\/(\d+)/)
+  const iotReportMatch = path.match(/\/iot-report\/(\d+)/)
+
+  if (iotReportMatch) {
+    const reportId = Number(iotReportMatch[1])
+    const reading = iotReadings.find(item => item.id === reportId)
+
+    return (
+      <div style={{
+        fontFamily: 'Arial',
+        padding: '40px',
+        backgroundColor: '#f4f7fa',
+        minHeight: '100vh'
+      }}>
+        <div style={cardStyle}>
+          <h1>PramaanOne IoT Audit Report</h1>
+
+          {!reading ? (
+            <p>Loading or IoT reading not found...</p>
+          ) : (
+            <>
+              <h2 style={{ color: 'green' }}>✓ Verified IoT Meter Reading</h2>
+              <p><strong>Reading ID:</strong> {reading.id}</p>
+              <p><strong>Meter ID:</strong> {reading.meterId}</p>
+              <p><strong>Parameter:</strong> {reading.parameter}</p>
+              <p><strong>Value:</strong> {reading.value} {reading.unit}</p>
+              <p><strong>Location:</strong> {reading.location}</p>
+              <p><strong>Status:</strong> {reading.status}</p>
+              <p><strong>Azure ACL:</strong> {reading.azureAclStatus || 'Not Sent'}</p>
+              <p><strong>Hash:</strong> {reading.hash || 'N/A'}</p>
+              <p><strong>Timestamp:</strong> {new Date(reading.timestamp).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })} IST</p>
+
+              <div style={{ display: 'flex', gap: '12px', marginTop: '15px', flexWrap: 'wrap' }}>
+                <button onClick={() => generateIotPdfCertificate(reading)} style={buttonStyle}>
+                  Download IoT Audit PDF
+                </button>
+
+                <button onClick={() => window.print()} style={buttonStyle}>
+                  Print IoT Report
+                </button>
+              </div>
+
+              {reading.qrCode && (
+                <div style={{ marginTop: '20px' }}>
+                  <p><strong>QR Verification:</strong></p>
+                  <img
+                    src={reading.qrCode}
+                    alt="IoT QR Verification"
+                    style={{
+                      width: '150px',
+                      height: '150px',
+                      border: '1px solid #cbd5e1',
+                      padding: '8px',
+                      borderRadius: '10px',
+                      backgroundColor: 'white'
+                    }}
+                  />
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+    )
+  }
+
+
 
   if (verifyMatch) {
     const verifyId = Number(verifyMatch[1])
@@ -454,6 +554,8 @@ function App() {
                   <th style={{ padding: '10px', border: '1px solid #e2e8f0', textAlign: 'left' }}>Value</th>
                   <th style={{ padding: '10px', border: '1px solid #e2e8f0', textAlign: 'left' }}>Location</th>
                   <th style={{ padding: '10px', border: '1px solid #e2e8f0', textAlign: 'left' }}>Status</th>
+                  <th style={{ padding: '10px', border: '1px solid #e2e8f0', textAlign: 'left' }}>Azure ACL</th>
+                  <th style={{ padding: '10px', border: '1px solid #e2e8f0', textAlign: 'left' }}>Report</th>
                 </tr>
               </thead>
               <tbody>
@@ -464,6 +566,15 @@ function App() {
                     <td style={{ padding: '10px', border: '1px solid #e2e8f0' }}>{reading.value} {reading.unit}</td>
                     <td style={{ padding: '10px', border: '1px solid #e2e8f0' }}>{reading.location}</td>
                     <td style={{ padding: '10px', border: '1px solid #e2e8f0' }}>{reading.status}</td>
+                    <td style={{ padding: '10px', border: '1px solid #e2e8f0' }}>{reading.azureAclStatus || 'Not Sent'}</td>
+                    <td style={{ padding: '10px', border: '1px solid #e2e8f0' }}>
+                      <button
+                        onClick={() => window.open(`/iot-report/${reading.id}`, '_blank')}
+                        style={buttonStyle}
+                      >
+                        Open IoT Report
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
