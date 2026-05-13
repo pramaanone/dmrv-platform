@@ -596,17 +596,21 @@ function App() {
             <p style={{ color: '#475569', fontSize: '16px' }}>{workspace.focus}</p>
 
             <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+              display: 'flex',
+              flexWrap: 'wrap',
               gap: '12px',
-              marginTop: '16px'
+              marginTop: '18px'
             }}>
               {workspace.actions.map((action, index) => (
                 <div key={index} style={{
-                  padding: '12px',
-                  borderRadius: '12px',
-                  background: 'white',
-                  border: '1px solid #e9d5ff'
+                  padding: '11px 15px',
+                  borderRadius: '999px',
+                  background: 'linear-gradient(135deg, #ffffff, #f3e8ff)',
+                  border: '1px solid #d8b4fe',
+                  color: '#581c87',
+                  fontWeight: 700,
+                  fontSize: '14px',
+                  boxShadow: '0 6px 18px rgba(124, 58, 237, 0.12)'
                 }}>
                   ✓ {action}
                 </div>
