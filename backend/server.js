@@ -118,6 +118,9 @@ app.post('/upload', upload.single('image'), async (req, res) => {
     auditEntry.azureAclResponse = aclResult.body
 
   } catch (error) {
+    console.error('AZURE ACL ERROR:')
+    console.error(error)
+
     auditEntry.azureAclStatus = 'Failed'
     auditEntry.azureAclError = error.message
   }
