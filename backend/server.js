@@ -125,8 +125,14 @@ app.post('/upload', upload.single('image'), async (req, res) => {
       verificationUrl: auditEntry.verificationUrl
     })
 
-    auditEntry.azureAclStatus = 'Stored'
     auditEntry.azureAclResponse = aclResult.body
+
+    if (aclResult.body && aclResult.body.error) {
+      auditEntry.azureAclStatus = 'Failed'
+      auditEntry.azureAclError = aclResult.body.error.message || 'Azure ACL write failed'
+    } else {
+      auditEntry.azureAclStatus = 'Stored'
+    }
 
   } catch (error) {
     console.error('AZURE ACL ERROR:')
