@@ -184,12 +184,12 @@ function App() {
     doc.text(`Azure ACL Status: ${reading.azureAclStatus || 'Not Sent'}`, 20, 140)
     doc.text(`Timestamp: ${new Date(reading.timestamp).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })} IST`, 20, 150)
 
-    doc.text('IoT Reading SHA256 Hash:', 20, 135)
+    doc.text('Edge Gateway Reading SHA256 Hash:', 20, 135)
     const hashLines = doc.splitTextToSize(reading.hash || 'N/A', 170)
     doc.text(hashLines, 20, 145)
 
     doc.text('Digital Signature:', 20, 175)
-    doc.text('Signed by PramaanOne IoT Verification Engine', 20, 185)
+    doc.text('Signed by PramaanOne Edge Gateway Verification Engine', 20, 185)
     doc.text('Signature Mode: Demo Digital Signature', 20, 195)
 
     if (reading.qrCode) {
@@ -197,7 +197,7 @@ function App() {
       doc.addImage(reading.qrCode, 'PNG', 20, 220, 45, 45)
     }
 
-    doc.save(`PramaanOne-IoT-Report-${reading.id}.pdf`)
+    doc.save(`PramaanOne-Edge-Gateway-Report-${reading.id}.pdf`)
   }
 
   const cardStyle = {
@@ -251,10 +251,10 @@ function App() {
           <h1>PramaanOne Edge Gateway Audit Report</h1>
 
           {!reading ? (
-            <p>Loading or IoT reading not found...</p>
+            <p>Loading or Edge Gateway reading not found...</p>
           ) : (
             <>
-              <h2 style={{ color: 'green' }}>✓ Verified IoT Meter Reading</h2>
+              <h2 style={{ color: 'green' }}>✓ Verified Edge Gateway Meter Reading</h2>
               <p><strong>Reading ID:</strong> {reading.id}</p>
               <p><strong>Edge Gateway ID:</strong> {reading.edgeGatewayId || 'EDGE-GNT-001'}</p>
               <p><strong>Meter ID:</strong> {reading.meterId}</p>
@@ -283,7 +283,7 @@ function App() {
                   <p><strong>QR Verification:</strong></p>
                   <img
                     src={reading.qrCode}
-                    alt="IoT QR Verification"
+                    alt="Edge Gateway QR Verification"
                     style={{
                       width: '150px',
                       height: '150px',
@@ -479,7 +479,7 @@ function App() {
       }}>
         <h2 style={{ marginTop: 0 }}>Compliance Overview</h2>
         <p style={{ maxWidth: '900px', color: '#e2e8f0', fontSize: '16px' }}>
-          PramaanOne is tracking satellite evidence, IoT meter readings, immutable audit records,
+          PramaanOne is tracking satellite evidence, Edge gateway meter readings, immutable audit records,
           Azure Confidential Ledger status, QR verification and signed PDF certificates in one audit-friendly dashboard.
         </p>
 
