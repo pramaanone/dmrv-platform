@@ -559,6 +559,63 @@ function App() {
         </div>
       </div>
 
+      {(() => {
+        const roleWorkspaces = {
+          'Platform Admin': {
+            title: 'Platform Admin Workspace',
+            focus: 'Monitor platform health, audit records, Azure ACL status and user access.',
+            actions: ['Review total projects and audit records', 'Check Azure ACL Stored status', 'Monitor satellite and Edge Gateway submissions', 'Prepare platform demo for stakeholders']
+          },
+          'Auditor': {
+            title: 'Auditor Workspace',
+            focus: 'Verify satellite evidence, Edge Gateway readings, hashes, QR certificates and ACL proof.',
+            actions: ['Open satellite certificate', 'Download signed PDF certificate', 'Open Edge Gateway audit report', 'Validate Azure Confidential Ledger proof']
+          },
+          'Factory Operator': {
+            title: 'Factory Operator Workspace',
+            focus: 'Submit factory evidence and Edge Gateway meter readings for audit verification.',
+            actions: ['Upload factory boundary evidence', 'Simulate Edge Gateway reading', 'Confirm Azure ACL Stored status', 'Share generated report with auditor']
+          },
+          'Compliance Viewer': {
+            title: 'Compliance Viewer Workspace',
+            focus: 'Review audit-ready reports and download compliance proof documents.',
+            actions: ['View audit dashboard', 'Open verification reports', 'Download PDF certificates', 'Review QR-based audit trail']
+          }
+        }
+
+        const workspace = roleWorkspaces[currentUser.role] || roleWorkspaces['Compliance Viewer']
+
+        return (
+          <div style={{
+            ...cardStyle,
+            marginTop: '25px',
+            borderLeft: '6px solid #7c3aed',
+            background: '#faf5ff'
+          }}>
+            <h2 style={{ marginTop: 0 }}>{workspace.title}</h2>
+            <p style={{ color: '#475569', fontSize: '16px' }}>{workspace.focus}</p>
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+              gap: '12px',
+              marginTop: '16px'
+            }}>
+              {workspace.actions.map((action, index) => (
+                <div key={index} style={{
+                  padding: '12px',
+                  borderRadius: '12px',
+                  background: 'white',
+                  border: '1px solid #e9d5ff'
+                }}>
+                  ✓ {action}
+                </div>
+              ))}
+            </div>
+          </div>
+        )
+      })()}
+
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
