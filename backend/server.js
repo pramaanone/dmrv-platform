@@ -16,6 +16,9 @@ app.use('/uploads', express.static(path.join(__dirname, '../storage/uploads')))
 const ledgerFile = path.join(__dirname, '../storage/ledger.json')
 const iotReadingsFile = path.join(__dirname, '../storage/iot-readings.json')
 
+const backendBaseUrl = process.env.BACKEND_BASE_URL || 'https://dmrv-platform-m0g3.onrender.com'
+const frontendBaseUrl = process.env.FRONTEND_BASE_URL || 'https://dmrv-platform-beige.vercel.app'
+
 const projects = [
   {
     id: 1,
@@ -100,13 +103,13 @@ app.post('/upload', upload.single('image'), async (req, res) => {
     .digest('hex')
 
   const nextId = auditLedger.length + 1
-  const verificationUrl = `http://localhost:5173/verify/${nextId}`
+  const verificationUrl = `${frontendBaseUrl}/verify/${nextId}`
   const qrCode = await QRCode.toDataURL(verificationUrl)
 
   const auditEntry = {
     id: nextId,
     fileName: req.file.filename,
-    imageUrl: `http://localhost:5050/uploads/${req.file.filename}`,
+    imageUrl: `${backendBaseUrl}/uploads/${req.file.filename}`,
     hash: fileHash,
     timestamp: new Date(),
     status: 'Verified',
