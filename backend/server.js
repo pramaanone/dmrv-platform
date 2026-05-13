@@ -225,7 +225,7 @@ app.post('/iot/readings', async (req, res) => {
   try {
     const aclResult = await writeAuditToACL({
       project: 'Demo Factory dMRV Project',
-      recordType: 'IoT Meter Reading',
+      recordType: 'Edge Gateway Meter Reading',
       edgeGatewayId: reading.edgeGatewayId,
       meterId: reading.meterId,
       protocol: reading.protocol,
