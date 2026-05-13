@@ -180,6 +180,19 @@ function App() {
     fontWeight: '600'
   }
 
+
+  const badgeStyle = (bg, color) => ({
+    display: 'inline-block',
+    padding: '7px 12px',
+    borderRadius: '999px',
+    backgroundColor: bg,
+    color,
+    fontSize: '13px',
+    fontWeight: '700',
+    marginRight: '8px',
+    marginTop: '8px'
+  })
+
   const path = window.location.pathname
   const verifyMatch = path.match(/\/verify\/(\d+)/)
 
@@ -332,6 +345,13 @@ function App() {
           <p style={{ color: '#334155', fontSize: '20px', marginTop: 0 }}>
             Digital Monitoring, Reporting & Verification
           </p>
+
+          <div>
+            <span style={badgeStyle('#dcfce7', '#166534')}>Audit Ready</span>
+            <span style={badgeStyle('#dbeafe', '#1e40af')}>Azure ACL Backed</span>
+            <span style={badgeStyle('#fef3c7', '#92400e')}>IoT Enabled</span>
+            <span style={badgeStyle('#ede9fe', '#5b21b6')}>PDF Certificate</span>
+          </div>
         </div>
 
         <div style={{ textAlign: 'right' }}>
@@ -342,10 +362,32 @@ function App() {
       </div>
 
       <div style={{
+        marginTop: '30px',
+        padding: '24px',
+        borderRadius: '18px',
+        background: 'linear-gradient(135deg, #0f172a, #164e63)',
+        color: 'white',
+        boxShadow: '0 10px 35px rgba(15, 23, 42, 0.18)'
+      }}>
+        <h2 style={{ marginTop: 0 }}>Compliance Overview</h2>
+        <p style={{ maxWidth: '900px', color: '#e2e8f0', fontSize: '16px' }}>
+          PramaanOne is tracking satellite evidence, IoT meter readings, immutable audit records,
+          Azure Confidential Ledger status, QR verification and signed PDF certificates in one audit-friendly dashboard.
+        </p>
+
+        <div>
+          <span style={badgeStyle('#ecfeff', '#155e75')}>Satellite Evidence</span>
+          <span style={badgeStyle('#ecfdf5', '#166534')}>Tamper-Proof Hash</span>
+          <span style={badgeStyle('#eff6ff', '#1d4ed8')}>QR Verification</span>
+          <span style={badgeStyle('#fff7ed', '#9a3412')}>Meter Ingestion</span>
+        </div>
+      </div>
+
+      <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
         gap: '18px',
-        marginTop: '35px'
+        marginTop: '25px'
       }}>
         <div style={cardStyle}>
           <h3>Total Projects</h3>
