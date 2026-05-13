@@ -487,7 +487,75 @@ function App() {
           <span style={badgeStyle('#ecfeff', '#155e75')}>Satellite Evidence</span>
           <span style={badgeStyle('#ecfdf5', '#166534')}>Tamper-Proof Hash</span>
           <span style={badgeStyle('#eff6ff', '#1d4ed8')}>QR Verification</span>
-          <span style={badgeStyle('#fff7ed', '#9a3412')}>Meter Ingestion</span>
+          <span style={badgeStyle('#fff7ed', '#9a3412')}>Edge Meter Ingestion</span>
+        </div>
+      </div>
+
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+        gap: '20px',
+        marginTop: '25px'
+      }}>
+        <div style={{
+          ...cardStyle,
+          borderLeft: '6px solid #0891b2'
+        }}>
+          <h2 style={{ marginTop: 0 }}>PramaanOne dMRV System Flow</h2>
+
+          <div style={{ display: 'grid', gap: '14px', marginTop: '16px' }}>
+            <div style={{ padding: '14px', borderRadius: '12px', background: '#ecfeff' }}>
+              <strong>Satellite Evidence Layer</strong>
+              <p style={{ marginBottom: 0 }}>
+                Factory boundary / site evidence is uploaded, hashed and linked with QR verification.
+              </p>
+            </div>
+
+            <div style={{ padding: '14px', borderRadius: '12px', background: '#f0fdf4' }}>
+              <strong>Edge Gateway Meter Layer</strong>
+              <p style={{ marginBottom: 0 }}>
+                Meter readings are simulated through Edge Gateway using Modbus RTU over RS485.
+              </p>
+            </div>
+
+            <div style={{ padding: '14px', borderRadius: '12px', background: '#eff6ff' }}>
+              <strong>Azure Confidential Ledger Proof Layer</strong>
+              <p style={{ marginBottom: 0 }}>
+                Satellite and Edge records are stored as immutable proof transactions in Azure ACL.
+              </p>
+            </div>
+
+            <div style={{ padding: '14px', borderRadius: '12px', background: '#fff7ed' }}>
+              <strong>Audit Report & Certificate Layer</strong>
+              <p style={{ marginBottom: 0 }}>
+                Auditors can open QR-based certificates and download signed PDF reports.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div style={{
+          ...cardStyle,
+          borderLeft: '6px solid #16a34a'
+        }}>
+          <h2 style={{ marginTop: 0 }}>Demo Guide / How to Test</h2>
+
+          <ol style={{ lineHeight: '1.8', paddingLeft: '22px' }}>
+            <li>Upload satellite or factory boundary evidence image.</li>
+            <li>Verify hash generation and Azure ACL Stored status.</li>
+            <li>Open certificate and download signed PDF.</li>
+            <li>Click Simulate Edge Gateway Reading.</li>
+            <li>Open Edge Gateway Audit Report.</li>
+            <li>Download Edge Gateway PDF and verify QR-based report.</li>
+          </ol>
+
+          <div style={{ marginTop: '16px', padding: '14px', borderRadius: '12px', background: '#f8fafc' }}>
+            <strong>Demo Focus:</strong>
+            <p style={{ marginBottom: 0 }}>
+              This demo proves satellite evidence, Edge Gateway readings, hash generation,
+              Azure Confidential Ledger proof and auditor-friendly PDF reporting.
+            </p>
+          </div>
         </div>
       </div>
 
