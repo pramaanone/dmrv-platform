@@ -14,6 +14,7 @@ app.use(express.json())
 app.use('/uploads', express.static(path.join(__dirname, '../storage/uploads')))
 
 const ledgerFile = path.join(__dirname, '../storage/ledger.json')
+const iotReadingsFile = path.join(__dirname, '../storage/iot-readings.json')
 
 const projects = [
   {
@@ -37,8 +38,18 @@ if (fs.existsSync(ledgerFile)) {
   auditLedger = JSON.parse(fs.readFileSync(ledgerFile, 'utf8'))
 }
 
+let iotReadings = []
+
+if (fs.existsSync(iotReadingsFile)) {
+  iotReadings = JSON.parse(fs.readFileSync(iotReadingsFile, 'utf8'))
+}
+
 function saveLedger() {
   fs.writeFileSync(ledgerFile, JSON.stringify(auditLedger, null, 2))
+}
+
+function saveIotReadings() {
+  fs.writeFileSync(iotReadingsFile, JSON.stringify(iotReadings, null, 2))
 }
 
 const storage = multer.diskStorage({
@@ -135,6 +146,50 @@ app.post('/upload', upload.single('image'), async (req, res) => {
     hash: fileHash,
     verificationUrl,
     qrCode
+  })
+})
+
+
+app.get('/iot/readings', (req, res) => {
+  res.json(iotReadings)
+})
+
+app.post('/iot/readings', (req, res) => {
+  const {
+    projectId,
+    meterId,
+    parameter,
+    value,
+    unit,
+    location
+  } = req.body
+
+  if (!meterId || !parameter || value === undefined || !unit) {
+    return res.status(400).json({
+      status: 'Failed',
+      message: 'meterId, parameter, value and unit are required'
+    })
+  }
+
+  const reading = {
+    id: iotReadings.length + 1,
+    projectId: projectId || 1,
+    meterId,
+    parameter,
+    value,
+    unit,
+    location: location || 'Vizag, Andhra Pradesh',
+    timestamp: new Date(),
+    status: 'Received'
+  }
+
+  iotReadings.push(reading)
+  saveIotReadings()
+
+  res.json({
+    status: 'Success',
+    message: 'IoT reading ingested successfully',
+    reading
   })
 })
 

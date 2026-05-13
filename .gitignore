@@ -6,3 +6,6 @@ storage/ledger.json
 frontend/dist
 backend/node_modules
 frontend/node_modules
+storage/frontend-backups/
+storage/
+backend/server-backup-before-iot.js
