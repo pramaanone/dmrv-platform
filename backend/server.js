@@ -163,7 +163,7 @@ app.get('/iot/readings', (req, res) => {
   res.json(iotReadings)
 })
 
-app.post('/iot/readings', (req, res) => {
+app.post('/iot/readings', async (req, res) => {
   const {
     projectId,
     meterId,
