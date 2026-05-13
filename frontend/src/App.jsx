@@ -56,7 +56,7 @@ function App() {
       .then((data) => setLedger(data))
       .catch(() => setLedger([]))
 
-    fetch('http://localhost:5050/iot/readings')
+    fetch('https://dmrv-platform-m0g3.onrender.com/iot/readings')
       .then((res) => res.json())
       .then((data) => setIotReadings(data))
       .catch(() => setIotReadings([]))
@@ -120,7 +120,7 @@ function App() {
       location: 'Vizag Factory'
     }
 
-    const response = await fetch('http://localhost:5050/iot/readings', {
+    const response = await fetch('https://dmrv-platform-m0g3.onrender.com/iot/readings', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(sampleReading)
