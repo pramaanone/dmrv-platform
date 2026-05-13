@@ -113,11 +113,13 @@ function App() {
   const simulateIotReading = async () => {
     const sampleReading = {
       projectId: 1,
-      meterId: 'MTR-VIZAG-001',
+      edgeGatewayId: 'EDGE-GNT-001',
+      meterId: 'MTR-GNT-POWER-001',
+      protocol: 'Modbus RTU over RS485',
       parameter: 'Electricity Consumption',
       value: Number((1200 + Math.random() * 100).toFixed(2)),
       unit: 'kWh',
-      location: 'Vizag Factory'
+      location: 'Guntur Spinning Mills, Guntur'
     }
 
     const response = await fetch('https://dmrv-platform-m0g3.onrender.com/iot/readings', {
@@ -166,18 +168,21 @@ function App() {
     const doc = new jsPDF()
 
     doc.setFontSize(20)
-    doc.text('PramaanOne IoT Audit Report', 20, 20)
+    doc.text('PramaanOne Edge Gateway Audit Report', 20, 20)
 
     doc.setFontSize(12)
-    doc.text('Report Type: IoT Meter Reading Verification', 20, 35)
+    doc.text('Report Type: Edge Gateway Meter Reading Verification', 20, 35)
     doc.text(`Reading ID: ${reading.id}`, 20, 50)
-    doc.text(`Meter ID: ${reading.meterId}`, 20, 60)
-    doc.text(`Parameter: ${reading.parameter}`, 20, 70)
-    doc.text(`Value: ${reading.value} ${reading.unit}`, 20, 80)
-    doc.text(`Location: ${reading.location}`, 20, 90)
-    doc.text(`Status: ${reading.status}`, 20, 100)
-    doc.text(`Azure ACL Status: ${reading.azureAclStatus || 'Not Sent'}`, 20, 110)
-    doc.text(`Timestamp: ${new Date(reading.timestamp).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })} IST`, 20, 120)
+    doc.text(`Edge Gateway ID: ${reading.edgeGatewayId || 'EDGE-GNT-001'}`, 20, 60)
+    doc.text(`Meter ID: ${reading.meterId}`, 20, 70)
+    doc.text(`Protocol: ${reading.protocol || 'Modbus RTU over RS485'}`, 20, 80)
+    doc.text(`Parameter: ${reading.parameter}`, 20, 90)
+    doc.text(`Value: ${reading.value} ${reading.unit}`, 20, 100)
+    doc.text(`Location: ${reading.location}`, 20, 110)
+    doc.text(`Edge Status: ${reading.edgeStatus || 'Validated at Edge'}`, 20, 120)
+    doc.text(`Sync Status: ${reading.syncStatus || 'Sent to Cloud'}`, 20, 130)
+    doc.text(`Azure ACL Status: ${reading.azureAclStatus || 'Not Sent'}`, 20, 140)
+    doc.text(`Timestamp: ${new Date(reading.timestamp).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })} IST`, 20, 150)
 
     doc.text('IoT Reading SHA256 Hash:', 20, 135)
     const hashLines = doc.splitTextToSize(reading.hash || 'N/A', 170)
@@ -243,7 +248,7 @@ function App() {
         minHeight: '100vh'
       }}>
         <div style={cardStyle}>
-          <h1>PramaanOne IoT Audit Report</h1>
+          <h1>PramaanOne Edge Gateway Audit Report</h1>
 
           {!reading ? (
             <p>Loading or IoT reading not found...</p>
@@ -251,22 +256,25 @@ function App() {
             <>
               <h2 style={{ color: 'green' }}>✓ Verified IoT Meter Reading</h2>
               <p><strong>Reading ID:</strong> {reading.id}</p>
+              <p><strong>Edge Gateway ID:</strong> {reading.edgeGatewayId || 'EDGE-GNT-001'}</p>
               <p><strong>Meter ID:</strong> {reading.meterId}</p>
+              <p><strong>Protocol:</strong> {reading.protocol || 'Modbus RTU over RS485'}</p>
               <p><strong>Parameter:</strong> {reading.parameter}</p>
               <p><strong>Value:</strong> {reading.value} {reading.unit}</p>
               <p><strong>Location:</strong> {reading.location}</p>
-              <p><strong>Status:</strong> {reading.status}</p>
+              <p><strong>Edge Status:</strong> {reading.edgeStatus || 'Validated at Edge'}</p>
+              <p><strong>Sync Status:</strong> {reading.syncStatus || 'Sent to Cloud'}</p>
               <p><strong>Azure ACL:</strong> {reading.azureAclStatus || 'Not Sent'}</p>
               <p><strong>Hash:</strong> {reading.hash || 'N/A'}</p>
               <p><strong>Timestamp:</strong> {new Date(reading.timestamp).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })} IST</p>
 
               <div style={{ display: 'flex', gap: '12px', marginTop: '15px', flexWrap: 'wrap' }}>
                 <button onClick={() => generateIotPdfCertificate(reading)} style={buttonStyle}>
-                  Download IoT Audit PDF
+                  Download Edge Audit PDF
                 </button>
 
                 <button onClick={() => window.print()} style={buttonStyle}>
-                  Print IoT Report
+                  Print Edge Report
                 </button>
               </div>
 
@@ -505,7 +513,7 @@ function App() {
         </div>
 
         <div style={cardStyle}>
-          <h3>IoT Meter Readings</h3>
+          <h3>Edge Gateway & Meter Readings</h3>
           <h1>{iotReadings.length}</h1>
         </div>
 
@@ -536,10 +544,10 @@ function App() {
       </div>
 
       <div style={cardStyle}>
-        <h2>IoT Meter Readings</h2>
+        <h2>Edge Gateway & Meter Readings</h2>
 
         <button onClick={simulateIotReading} style={buttonStyle}>
-          Simulate IoT Meter Reading
+          Simulate Edge Gateway Reading
         </button>
 
         {iotReadings.length === 0 ? (
@@ -549,11 +557,14 @@ function App() {
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ backgroundColor: '#f1f5f9' }}>
+                  <th style={{ padding: '10px', border: '1px solid #e2e8f0', textAlign: 'left' }}>Edge Gateway ID</th>
                   <th style={{ padding: '10px', border: '1px solid #e2e8f0', textAlign: 'left' }}>Meter ID</th>
+                  <th style={{ padding: '10px', border: '1px solid #e2e8f0', textAlign: 'left' }}>Protocol</th>
                   <th style={{ padding: '10px', border: '1px solid #e2e8f0', textAlign: 'left' }}>Parameter</th>
                   <th style={{ padding: '10px', border: '1px solid #e2e8f0', textAlign: 'left' }}>Value</th>
                   <th style={{ padding: '10px', border: '1px solid #e2e8f0', textAlign: 'left' }}>Location</th>
-                  <th style={{ padding: '10px', border: '1px solid #e2e8f0', textAlign: 'left' }}>Status</th>
+                  <th style={{ padding: '10px', border: '1px solid #e2e8f0', textAlign: 'left' }}>Edge Status</th>
+                  <th style={{ padding: '10px', border: '1px solid #e2e8f0', textAlign: 'left' }}>Sync Status</th>
                   <th style={{ padding: '10px', border: '1px solid #e2e8f0', textAlign: 'left' }}>Azure ACL</th>
                   <th style={{ padding: '10px', border: '1px solid #e2e8f0', textAlign: 'left' }}>Report</th>
                 </tr>
@@ -561,18 +572,21 @@ function App() {
               <tbody>
                 {iotReadings.map((reading) => (
                   <tr key={reading.id}>
+                    <td style={{ padding: '10px', border: '1px solid #e2e8f0' }}>{reading.edgeGatewayId || 'EDGE-GNT-001'}</td>
                     <td style={{ padding: '10px', border: '1px solid #e2e8f0' }}>{reading.meterId}</td>
+                    <td style={{ padding: '10px', border: '1px solid #e2e8f0' }}>{reading.protocol || 'Modbus RTU over RS485'}</td>
                     <td style={{ padding: '10px', border: '1px solid #e2e8f0' }}>{reading.parameter}</td>
                     <td style={{ padding: '10px', border: '1px solid #e2e8f0' }}>{reading.value} {reading.unit}</td>
                     <td style={{ padding: '10px', border: '1px solid #e2e8f0' }}>{reading.location}</td>
-                    <td style={{ padding: '10px', border: '1px solid #e2e8f0' }}>{reading.status}</td>
+                    <td style={{ padding: '10px', border: '1px solid #e2e8f0' }}>{reading.edgeStatus || 'Validated at Edge'}</td>
+                    <td style={{ padding: '10px', border: '1px solid #e2e8f0' }}>{reading.syncStatus || 'Sent to Cloud'}</td>
                     <td style={{ padding: '10px', border: '1px solid #e2e8f0' }}>{reading.azureAclStatus || 'Not Sent'}</td>
                     <td style={{ padding: '10px', border: '1px solid #e2e8f0' }}>
                       <button
                         onClick={() => window.open(`/iot-report/${reading.id}`, '_blank')}
                         style={buttonStyle}
                       >
-                        Open IoT Report
+                        Open Edge Report
                       </button>
                     </td>
                   </tr>
