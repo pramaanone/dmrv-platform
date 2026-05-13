@@ -23,6 +23,13 @@ const projects = [
   }
 ]
 
+
+const uploadsDir = path.join(__dirname, '../storage/uploads')
+
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true })
+}
+
 let auditLedger = []
 
 if (fs.existsSync(ledgerFile)) {
