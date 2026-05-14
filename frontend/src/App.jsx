@@ -6,8 +6,10 @@ function App() {
   const [projects, setProjects] = useState([])
   const [ledger, setLedger] = useState([])
   const [iotReadings, setIotReadings] = useState([])
+  const [esgRecords, setEsgRecords] = useState([])
   const [selectedFile, setSelectedFile] = useState(null)
   const [uploadMessage, setUploadMessage] = useState('')
+  const [esgStatus, setEsgStatus] = useState('')
 
   const [loginEmail, setLoginEmail] = useState('')
   const [loginPassword, setLoginPassword] = useState('')
@@ -60,6 +62,11 @@ function App() {
       .then((res) => res.json())
       .then((data) => setIotReadings(data))
       .catch(() => setIotReadings([]))
+
+    fetch('https://dmrv-platform-m0g3.onrender.com/esg/records')
+      .then((res) => res.json())
+      .then((data) => setEsgRecords(data))
+      .catch(() => setEsgRecords([]))
   }
 
   useEffect(() => {
@@ -130,6 +137,85 @@ function App() {
 
     await response.json()
     loadData()
+  }
+
+  const getEsgSummary = () => {
+    const latestEnergyReading = [...iotReadings]
+      .reverse()
+      .find(reading => reading.parameter === 'Electricity Consumption')
+
+    const energyKwh = latestEnergyReading ? Number(latestEnergyReading.value) : 1276.24
+    const emissionFactor = 0.82
+    const co2Kg = Number((energyKwh * emissionFactor).toFixed(2))
+
+    return {
+      projectId: 1,
+      projectName: 'Demo Factory dMRV Project',
+      energyKwh,
+      co2Kg,
+      waterUsageLiters: 18450,
+      wasteGeneratedKg: 320,
+      renewableEnergyPercent: 18,
+      complianceScore: 76,
+      source: 'Edge Gateway and Satellite Evidence'
+    }
+  }
+
+  const storeEsgProof = async () => {
+    setEsgStatus('Storing ESG proof in Azure ACL...')
+
+    const response = await fetch('https://dmrv-platform-m0g3.onrender.com/esg/records', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(getEsgSummary())
+    })
+
+    const data = await response.json()
+
+    if (data.record?.azureAclStatus === 'Stored') {
+      setEsgStatus(`ESG proof stored in Azure ACL. Hash: ${data.record.hash}`)
+      setEsgRecords((prev) => [...prev, data.record])
+    } else {
+      setEsgStatus(`ESG proof storage failed: ${data.record?.azureAclError || 'Unknown error'}`)
+    }
+
+    loadData()
+  }
+
+  const downloadEsgPdf = (record = null) => {
+    const esg = record || getEsgSummary()
+    const doc = new jsPDF()
+
+    doc.setFontSize(20)
+    doc.text('PramaanOne ESG Summary Report', 20, 20)
+
+    doc.setFontSize(12)
+    doc.text('Report Type: ESG Sustainability Metrics Summary', 20, 35)
+    doc.text(`Project: ${esg.projectName}`, 20, 50)
+    doc.text(`Energy Usage: ${esg.energyKwh} kWh`, 20, 65)
+    doc.text(`Estimated CO2 Emissions: ${esg.co2Kg} kg CO2e`, 20, 80)
+    doc.text(`Water Usage: ${esg.waterUsageLiters} L`, 20, 95)
+    doc.text(`Waste Generated: ${esg.wasteGeneratedKg} kg`, 20, 110)
+    doc.text(`Renewable Energy: ${esg.renewableEnergyPercent}%`, 20, 125)
+    doc.text(`ESG Compliance Score: ${esg.complianceScore}/100`, 20, 140)
+    doc.text(`Source: ${esg.source}`, 20, 155)
+
+    if (esg.hash) {
+      doc.text(`ESG Hash: ${esg.hash}`, 20, 170)
+      doc.text(`Azure ACL Status: ${esg.azureAclStatus || 'Not Stored'}`, 20, 185)
+      doc.text(`Timestamp: ${new Date(esg.timestamp).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })} IST`, 20, 200)
+
+      if (esg.qrCode) {
+        doc.text('QR Verification:', 20, 215)
+        doc.addImage(esg.qrCode, 'PNG', 20, 220, 40, 40)
+      }
+    }
+
+    doc.setFontSize(10)
+    doc.text('Signed by PramaanOne ESG Verification Engine', 20, 275)
+    doc.text(`Generated: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })} IST`, 20, 285)
+
+    doc.save('PramaanOne-ESG-Summary-Report.pdf')
   }
 
 
@@ -493,69 +579,35 @@ function App() {
 
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-        gap: '20px',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+        gap: '18px',
         marginTop: '25px'
       }}>
-        <div style={{
-          ...cardStyle,
-          borderLeft: '6px solid #0891b2'
-        }}>
-          <h2 style={{ marginTop: 0 }}>PramaanOne dMRV System Flow</h2>
-
-          <div style={{ display: 'grid', gap: '14px', marginTop: '16px' }}>
-            <div style={{ padding: '14px', borderRadius: '12px', background: '#ecfeff' }}>
-              <strong>Satellite Evidence Layer</strong>
-              <p style={{ marginBottom: 0 }}>
-                Factory boundary / site evidence is uploaded, hashed and linked with QR verification.
-              </p>
-            </div>
-
-            <div style={{ padding: '14px', borderRadius: '12px', background: '#f0fdf4' }}>
-              <strong>Edge Gateway Meter Layer</strong>
-              <p style={{ marginBottom: 0 }}>
-                Meter readings are simulated through Edge Gateway using Modbus RTU over RS485.
-              </p>
-            </div>
-
-            <div style={{ padding: '14px', borderRadius: '12px', background: '#eff6ff' }}>
-              <strong>Azure Confidential Ledger Proof Layer</strong>
-              <p style={{ marginBottom: 0 }}>
-                Satellite and Edge records are stored as immutable proof transactions in Azure ACL.
-              </p>
-            </div>
-
-            <div style={{ padding: '14px', borderRadius: '12px', background: '#fff7ed' }}>
-              <strong>Audit Report & Certificate Layer</strong>
-              <p style={{ marginBottom: 0 }}>
-                Auditors can open QR-based certificates and download signed PDF reports.
-              </p>
-            </div>
-          </div>
+        <div style={cardStyle}>
+          <h3>Total Projects</h3>
+          <h1>{projects.length}</h1>
         </div>
 
-        <div style={{
-          ...cardStyle,
-          borderLeft: '6px solid #16a34a'
-        }}>
-          <h2 style={{ marginTop: 0 }}>Demo Guide / How to Test</h2>
+        <div style={cardStyle}>
+          <h3>Audit Records</h3>
+          <h1>{ledger.length}</h1>
+        </div>
 
-          <ol style={{ lineHeight: '1.8', paddingLeft: '22px' }}>
-            <li>Upload satellite or factory boundary evidence image.</li>
-            <li>Verify hash generation and Azure ACL Stored status.</li>
-            <li>Open certificate and download signed PDF.</li>
-            <li>Click Simulate Edge Gateway Reading.</li>
-            <li>Open Edge Gateway Audit Report.</li>
-            <li>Download Edge Gateway PDF and verify QR-based report.</li>
-          </ol>
+        <div style={cardStyle}>
+          <h3>Satellite Images</h3>
+          <h1>{ledger.length}</h1>
+        </div>
 
-          <div style={{ marginTop: '16px', padding: '14px', borderRadius: '12px', background: '#f8fafc' }}>
-            <strong>Demo Focus:</strong>
-            <p style={{ marginBottom: 0 }}>
-              This demo proves satellite evidence, Edge Gateway readings, hash generation,
-              Azure Confidential Ledger proof and auditor-friendly PDF reporting.
-            </p>
-          </div>
+        <div style={cardStyle}>
+          <h3>Edge Gateway & Meter Readings</h3>
+          <h1>{iotReadings.length}</h1>
+        </div>
+
+        <div style={cardStyle}>
+          <h3>Backend Status</h3>
+          <p style={{ color: backendStatus.includes('not') ? '#dc2626' : '#16a34a', fontWeight: '700' }}>
+            {backendStatus}
+          </p>
         </div>
       </div>
 
@@ -622,35 +674,69 @@ function App() {
 
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-        gap: '18px',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+        gap: '20px',
         marginTop: '25px'
       }}>
-        <div style={cardStyle}>
-          <h3>Total Projects</h3>
-          <h1>{projects.length}</h1>
+        <div style={{
+          ...cardStyle,
+          borderLeft: '6px solid #0891b2'
+        }}>
+          <h2 style={{ marginTop: 0 }}>PramaanOne dMRV System Flow</h2>
+
+          <div style={{ display: 'grid', gap: '14px', marginTop: '16px' }}>
+            <div style={{ padding: '14px', borderRadius: '12px', background: '#ecfeff' }}>
+              <strong>Satellite Evidence Layer</strong>
+              <p style={{ marginBottom: 0 }}>
+                Factory boundary / site evidence is uploaded, hashed and linked with QR verification.
+              </p>
+            </div>
+
+            <div style={{ padding: '14px', borderRadius: '12px', background: '#f0fdf4' }}>
+              <strong>Edge Gateway Meter Layer</strong>
+              <p style={{ marginBottom: 0 }}>
+                Meter readings are simulated through Edge Gateway using Modbus RTU over RS485.
+              </p>
+            </div>
+
+            <div style={{ padding: '14px', borderRadius: '12px', background: '#eff6ff' }}>
+              <strong>Azure Confidential Ledger Proof Layer</strong>
+              <p style={{ marginBottom: 0 }}>
+                Satellite and Edge records are stored as immutable proof transactions in Azure ACL.
+              </p>
+            </div>
+
+            <div style={{ padding: '14px', borderRadius: '12px', background: '#fff7ed' }}>
+              <strong>Audit Report & Certificate Layer</strong>
+              <p style={{ marginBottom: 0 }}>
+                Auditors can open QR-based certificates and download signed PDF reports.
+              </p>
+            </div>
+          </div>
         </div>
 
-        <div style={cardStyle}>
-          <h3>Audit Records</h3>
-          <h1>{ledger.length}</h1>
-        </div>
+        <div style={{
+          ...cardStyle,
+          borderLeft: '6px solid #16a34a'
+        }}>
+          <h2 style={{ marginTop: 0 }}>Demo Guide / How to Test</h2>
 
-        <div style={cardStyle}>
-          <h3>Satellite Images</h3>
-          <h1>{ledger.length}</h1>
-        </div>
+          <ol style={{ lineHeight: '1.8', paddingLeft: '22px' }}>
+            <li>Upload satellite or factory boundary evidence image.</li>
+            <li>Verify hash generation and Azure ACL Stored status.</li>
+            <li>Open certificate and download signed PDF.</li>
+            <li>Click Simulate Edge Gateway Reading.</li>
+            <li>Open Edge Gateway Audit Report.</li>
+            <li>Download Edge Gateway PDF and verify QR-based report.</li>
+          </ol>
 
-        <div style={cardStyle}>
-          <h3>Edge Gateway & Meter Readings</h3>
-          <h1>{iotReadings.length}</h1>
-        </div>
-
-        <div style={cardStyle}>
-          <h3>Backend Status</h3>
-          <p style={{ color: backendStatus.includes('not') ? '#dc2626' : '#16a34a', fontWeight: '700' }}>
-            {backendStatus}
-          </p>
+          <div style={{ marginTop: '16px', padding: '14px', borderRadius: '12px', background: '#f8fafc' }}>
+            <strong>Demo Focus:</strong>
+            <p style={{ marginBottom: 0 }}>
+              This demo proves satellite evidence, Edge Gateway readings, hash generation,
+              Azure Confidential Ledger proof and auditor-friendly PDF reporting.
+            </p>
+          </div>
         </div>
       </div>
 
@@ -724,6 +810,125 @@ function App() {
             </table>
           </div>
         )}
+      </div>
+
+      <div style={{
+        ...cardStyle,
+        borderLeft: '6px solid #059669',
+        background: '#f0fdf4'
+      }}>
+        <h2>ESG Metrics Dashboard</h2>
+        <p style={{ color: '#475569', fontSize: '16px' }}>
+          Sustainability summary based on satellite evidence and Edge Gateway energy readings.
+        </p>
+
+        {(() => {
+          const esgSummary = getEsgSummary()
+          const energyKwh = esgSummary.energyKwh
+          const co2Kg = esgSummary.co2Kg
+          const waterUsage = esgSummary.waterUsageLiters
+          const wasteGenerated = esgSummary.wasteGeneratedKg
+          const renewableEnergy = esgSummary.renewableEnergyPercent
+          const complianceScore = esgSummary.complianceScore
+
+          const esgCards = [
+            { label: 'Energy Usage', value: `${energyKwh} kWh`, note: 'From Edge Gateway meter data' },
+            { label: 'Estimated CO2 Emissions', value: `${co2Kg} kg CO2e`, note: 'Calculated using demo emission factor' },
+            { label: 'Water Usage', value: `${waterUsage} L`, note: 'Sample ESG metric' },
+            { label: 'Waste Generated', value: `${wasteGenerated} kg`, note: 'Sample ESG metric' },
+            { label: 'Renewable Energy', value: `${renewableEnergy}%`, note: 'Sample ESG metric' },
+            { label: 'ESG Compliance Score', value: `${complianceScore}/100`, note: 'Demo readiness score' }
+          ]
+
+          return (
+            <>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+                gap: '14px',
+                marginTop: '18px'
+              }}>
+                {esgCards.map((item, index) => (
+                  <div key={index} style={{
+                    padding: '16px',
+                    borderRadius: '14px',
+                    background: 'white',
+                    border: '1px solid #bbf7d0',
+                    boxShadow: '0 6px 18px rgba(22, 163, 74, 0.08)'
+                  }}>
+                    <p style={{ margin: 0, color: '#64748b', fontWeight: 700 }}>{item.label}</p>
+                    <h2 style={{ margin: '8px 0', color: '#166534' }}>{item.value}</h2>
+                    <p style={{ margin: 0, color: '#64748b', fontSize: '13px' }}>{item.note}</p>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{ marginTop: '18px', display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                <button onClick={storeEsgProof} style={buttonStyle}>
+                  Generate ESG Summary Record
+                </button>
+
+              </div>
+
+              {esgStatus && (
+                <p style={{ marginTop: '12px', color: esgStatus.includes('failed') ? '#b91c1c' : '#166534', fontWeight: 700 }}>
+                  {esgStatus}
+                </p>
+              )}
+
+              <div style={{
+                marginTop: '18px',
+                padding: '16px',
+                borderRadius: '14px',
+                background: 'white',
+                border: '1px solid #bbf7d0'
+              }}>
+                <h3 style={{ marginTop: 0 }}>ESG Summary Records</h3>
+
+                {esgRecords.length === 0 ? (
+                  <p>No ESG proof records stored yet.</p>
+                ) : (
+                  esgRecords.map((record) => (
+                    <div key={record.id} style={{
+                      padding: '14px',
+                      border: '1px solid #dcfce7',
+                      borderRadius: '12px',
+                      marginTop: '12px',
+                      background: '#f8fafc'
+                    }}>
+                      <p><strong>ID:</strong> {record.id}</p>
+                      <p><strong>Project:</strong> {record.projectName}</p>
+                      <p><strong>Energy Usage:</strong> {record.energyKwh} kWh</p>
+                      <p><strong>CO2 Emissions:</strong> {record.co2Kg} kg CO2e</p>
+                      <p><strong>Water Usage:</strong> {record.waterUsageLiters} L</p>
+                      <p><strong>Waste Generated:</strong> {record.wasteGeneratedKg} kg</p>
+                      <p><strong>Renewable Energy:</strong> {record.renewableEnergyPercent}%</p>
+                      <p><strong>Compliance Score:</strong> {record.complianceScore}/100</p>
+                      <p><strong>Hash:</strong> {record.hash}</p>
+                      <p><strong>Timestamp:</strong> {new Date(record.timestamp).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })} IST</p>
+                      <p><strong>Azure ACL:</strong> {record.azureAclStatus}</p>
+
+                      {record.qrCode && (
+                        <div style={{ marginTop: '12px' }}>
+                          <p><strong>QR Verification:</strong></p>
+                          <img
+                            src={record.qrCode}
+                            alt="ESG QR Verification"
+                            style={{ width: '120px', height: '120px' }}
+                          />
+                        </div>
+                      )}
+
+                      <button onClick={() => downloadEsgPdf(record)} style={buttonStyle}>
+                        Download ESG Summary PDF
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+            </>
+          )
+        })()}
       </div>
 
       <div style={cardStyle}>
