@@ -268,11 +268,13 @@ function App() {
     doc.text(`Edge Status: ${reading.edgeStatus || 'Validated at Edge'}`, 20, 120)
     doc.text(`Sync Status: ${reading.syncStatus || 'Sent to Cloud'}`, 20, 130)
     doc.text(`Azure ACL Status: ${reading.azureAclStatus || 'Not Sent'}`, 20, 140)
-    doc.text(`Timestamp: ${new Date(reading.timestamp).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })} IST`, 20, 150)
+    doc.text(`ServiceNow Status: ${reading.serviceNowStatus || 'Not Sent'}`, 20, 150)
+    doc.text(`ServiceNow Sys ID: ${reading.serviceNowSysId || 'N/A'}`, 20, 160)
+    doc.text(`Timestamp: ${new Date(reading.timestamp).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })} IST`, 20, 170)
 
-    doc.text('Edge Gateway Reading SHA256 Hash:', 20, 135)
+    doc.text('Edge Gateway Reading SHA256 Hash:', 20, 185)
     const hashLines = doc.splitTextToSize(reading.hash || 'N/A', 170)
-    doc.text(hashLines, 20, 145)
+    doc.text(hashLines, 20, 195)
 
     doc.text('Digital Signature:', 20, 175)
     doc.text('Signed by PramaanOne Edge Gateway Verification Engine', 20, 185)
@@ -351,6 +353,10 @@ function App() {
               <p><strong>Edge Status:</strong> {reading.edgeStatus || 'Validated at Edge'}</p>
               <p><strong>Sync Status:</strong> {reading.syncStatus || 'Sent to Cloud'}</p>
               <p><strong>Azure ACL:</strong> {reading.azureAclStatus || 'Not Sent'}</p>
+              <p><strong>ServiceNow:</strong> {reading.serviceNowStatus || 'Not Sent'}</p>
+              {reading.serviceNowSysId && (
+                <p><strong>ServiceNow Sys ID:</strong> {reading.serviceNowSysId}</p>
+              )}
               <p><strong>Hash:</strong> {reading.hash || 'N/A'}</p>
               <p><strong>Timestamp:</strong> {new Date(reading.timestamp).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })} IST</p>
 
@@ -796,6 +802,7 @@ function App() {
                     <td style={{ padding: '10px', border: '1px solid #e2e8f0' }}>{reading.edgeStatus || 'Validated at Edge'}</td>
                     <td style={{ padding: '10px', border: '1px solid #e2e8f0' }}>{reading.syncStatus || 'Sent to Cloud'}</td>
                     <td style={{ padding: '10px', border: '1px solid #e2e8f0' }}>{reading.azureAclStatus || 'Not Sent'}</td>
+                    <td style={{ padding: '10px', border: '1px solid #e2e8f0' }}>{reading.serviceNowStatus || 'Not Sent'}</td>
                     <td style={{ padding: '10px', border: '1px solid #e2e8f0' }}>
                       <button
                         onClick={() => window.open(`/iot-report/${reading.id}`, '_blank')}
