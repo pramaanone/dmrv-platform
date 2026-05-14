@@ -231,11 +231,13 @@ function App() {
     doc.text(`Record ID: ${entry.id}`, 20, 60)
     doc.text(`File Name: ${entry.fileName}`, 20, 70)
     doc.text(`Azure ACL Status: ${entry.azureAclStatus || 'Not Sent'}`, 20, 80)
-    doc.text(`Timestamp: ${new Date(entry.timestamp).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })} IST`, 20, 90)
+    doc.text(`ServiceNow Status: ${entry.serviceNowStatus || 'Not Sent'}`, 20, 90)
+    doc.text(`ServiceNow Sys ID: ${entry.serviceNowSysId || 'N/A'}`, 20, 100)
+    doc.text(`Timestamp: ${new Date(entry.timestamp).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })} IST`, 20, 110)
 
-    doc.text('SHA256 Hash:', 20, 105)
+    doc.text('SHA256 Hash:', 20, 125)
     const hashLines = doc.splitTextToSize(entry.hash || 'N/A', 170)
-    doc.text(hashLines, 20, 115)
+    doc.text(hashLines, 20, 135)
 
     doc.text('Digital Signature:', 20, 145)
     doc.text('Signed by PramaanOne dMRV Verification Engine', 20, 155)
@@ -418,6 +420,10 @@ function App() {
               <p><strong>Record ID:</strong> {entry.id}</p>
               <p><strong>Status:</strong> {entry.status}</p>
               <p><strong>Azure ACL:</strong> {entry.azureAclStatus || 'Not Sent'}</p>
+              <p><strong>ServiceNow:</strong> {entry.serviceNowStatus || 'Not Sent'}</p>
+              {entry.serviceNowSysId && (
+                <p><strong>ServiceNow Sys ID:</strong> {entry.serviceNowSysId}</p>
+              )}
               <p><strong>File:</strong> {entry.fileName}</p>
               <p><strong>Hash:</strong> {entry.hash}</p>
               <p><strong>Timestamp:</strong> {new Date(entry.timestamp).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })} IST</p>
