@@ -907,6 +907,10 @@ function App() {
                       <p><strong>Hash:</strong> {record.hash}</p>
                       <p><strong>Timestamp:</strong> {new Date(record.timestamp).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })} IST</p>
                       <p><strong>Azure ACL:</strong> {record.azureAclStatus}</p>
+                      <p><strong>ServiceNow:</strong> {record.serviceNowStatus || 'Not Sent'}</p>
+                      {record.serviceNowSysId && (
+                        <p><strong>ServiceNow Sys ID:</strong> {record.serviceNowSysId}</p>
+                      )}
 
                       {record.qrCode && (
                         <div style={{ marginTop: '12px' }}>
