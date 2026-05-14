@@ -417,6 +417,25 @@ app.post('/iot/readings', async (req, res) => {
     reading.azureAclError = error.message
   }
 
+  try {
+    const serviceNowResult = await sendToServiceNow({
+      recordType: 'Edge Gateway Meter Reading',
+      projectName: 'Demo Factory dMRV Project',
+      hash: reading.hash,
+      azureAclStatus: reading.azureAclStatus,
+      verificationUrl: reading.verificationUrl
+    })
+
+    reading.serviceNowStatus = serviceNowResult.status
+    reading.serviceNowSysId = serviceNowResult.sysId
+    reading.serviceNowRecordNumber = serviceNowResult.recordNumber
+    reading.serviceNowResponse = serviceNowResult.response
+    reading.serviceNowError = serviceNowResult.error || serviceNowResult.message
+  } catch (error) {
+    reading.serviceNowStatus = 'Failed'
+    reading.serviceNowError = error.message
+  }
+
   iotReadings.push(reading)
   saveIotReadings()
 
