@@ -15,6 +15,7 @@ app.use('/uploads', express.static(path.join(__dirname, '../storage/uploads')))
 
 const ledgerFile = path.join(__dirname, '../storage/ledger.json')
 const iotReadingsFile = path.join(__dirname, '../storage/iot-readings.json')
+const esgRecordsFile = path.join(__dirname, '../storage/esg-records.json')
 
 const backendBaseUrl = process.env.BACKEND_BASE_URL || 'https://dmrv-platform-m0g3.onrender.com'
 const frontendBaseUrl = process.env.FRONTEND_BASE_URL || 'https://dmrv-platform-beige.vercel.app'
@@ -47,12 +48,22 @@ if (fs.existsSync(iotReadingsFile)) {
   iotReadings = JSON.parse(fs.readFileSync(iotReadingsFile, 'utf8'))
 }
 
+let esgRecords = []
+
+if (fs.existsSync(esgRecordsFile)) {
+  esgRecords = JSON.parse(fs.readFileSync(esgRecordsFile, 'utf8'))
+}
+
 function saveLedger() {
   fs.writeFileSync(ledgerFile, JSON.stringify(auditLedger, null, 2))
 }
 
 function saveIotReadings() {
   fs.writeFileSync(iotReadingsFile, JSON.stringify(iotReadings, null, 2))
+}
+
+function saveEsgRecords() {
+  fs.writeFileSync(esgRecordsFile, JSON.stringify(esgRecords, null, 2))
 }
 
 const storage = multer.diskStorage({
@@ -65,6 +76,93 @@ const storage = multer.diskStorage({
 })
 
 const upload = multer({ storage: storage })
+
+app.get('/esg/records', (req, res) => {
+  res.json(esgRecords)
+})
+
+app.post('/esg/records', async (req, res) => {
+  const {
+    projectId,
+    projectName,
+    energyKwh,
+    co2Kg,
+    waterUsageLiters,
+    wasteGeneratedKg,
+    renewableEnergyPercent,
+    complianceScore,
+    source
+  } = req.body
+
+  const timestamp = new Date().toISOString()
+  const nextId = esgRecords.length + 1
+
+  const esgPayload = {
+    id: nextId,
+    projectId: projectId || 1,
+    projectName: projectName || 'Demo Factory dMRV Project',
+    recordType: 'ESG Summary Record',
+    energyKwh,
+    co2Kg,
+    waterUsageLiters,
+    wasteGeneratedKg,
+    renewableEnergyPercent,
+    complianceScore,
+    source: source || 'Edge Gateway and Satellite Evidence',
+    timestamp
+  }
+
+  const esgHash = crypto
+    .createHash('sha256')
+    .update(JSON.stringify(esgPayload))
+    .digest('hex')
+
+  const verificationUrl = `${frontendBaseUrl}/`
+
+  const esgRecord = {
+    ...esgPayload,
+    hash: esgHash,
+    verificationUrl,
+    azureAclStatus: 'Pending'
+  }
+
+  try {
+    const aclResult = await writeAuditToACL({
+      project: esgRecord.projectName,
+      recordType: esgRecord.recordType,
+      energyKwh: esgRecord.energyKwh,
+      co2Kg: esgRecord.co2Kg,
+      waterUsageLiters: esgRecord.waterUsageLiters,
+      wasteGeneratedKg: esgRecord.wasteGeneratedKg,
+      renewableEnergyPercent: esgRecord.renewableEnergyPercent,
+      complianceScore: esgRecord.complianceScore,
+      source: esgRecord.source,
+      esgHash: esgRecord.hash,
+      timestamp: esgRecord.timestamp,
+      verificationUrl: esgRecord.verificationUrl
+    })
+
+    esgRecord.azureAclResponse = aclResult.body
+
+    if (aclResult.body && aclResult.body.error) {
+      esgRecord.azureAclStatus = 'Failed'
+      esgRecord.azureAclError = aclResult.body.error.message || 'Azure ACL write failed'
+    } else {
+      esgRecord.azureAclStatus = 'Stored'
+    }
+  } catch (error) {
+    esgRecord.azureAclStatus = 'Failed'
+    esgRecord.azureAclError = error.message
+  }
+
+  esgRecords.push(esgRecord)
+  saveEsgRecords()
+
+  res.json({
+    message: 'ESG summary record stored successfully',
+    record: esgRecord
+  })
+})
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', message: 'dMRV backend is running' })
