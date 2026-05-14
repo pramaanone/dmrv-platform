@@ -66,6 +66,55 @@ function saveEsgRecords() {
   fs.writeFileSync(esgRecordsFile, JSON.stringify(esgRecords, null, 2))
 }
 
+async function sendToServiceNow(record) {
+  const instanceUrl = process.env.SERVICENOW_INSTANCE_URL
+  const username = process.env.SERVICENOW_USERNAME
+  const password = process.env.SERVICENOW_PASSWORD
+  const tableName = process.env.SERVICENOW_TABLE || 'u_pramaanone_audit_records'
+
+  if (!instanceUrl || !username || !password) {
+    return {
+      status: 'Skipped',
+      message: 'ServiceNow environment variables not configured'
+    }
+  }
+
+  const authToken = Buffer.from(`${username}:${password}`).toString('base64')
+
+  const response = await fetch(`${instanceUrl}/api/now/table/${tableName}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Basic ${authToken}`
+    },
+    body: JSON.stringify({
+      u_record_type: record.recordType,
+      u_project_name: record.projectName || record.project || 'Demo Factory dMRV Project',
+      u_hash: record.hash,
+      u_azure_acl_status: record.azureAclStatus || 'Not Stored',
+      u_verification_url: record.verificationUrl || frontendBaseUrl,
+      u_source_system: 'PramaanOne',
+      u_review_status: 'submitted'
+    })
+  })
+
+  const data = await response.json()
+
+  if (!response.ok) {
+    return {
+      status: 'Failed',
+      error: data
+    }
+  }
+
+  return {
+    status: 'Created',
+    sysId: data.result?.sys_id,
+    recordNumber: data.result?.number || data.result?.sys_id,
+    response: data.result
+  }
+}
+
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, '../storage/uploads')
@@ -155,6 +204,18 @@ app.post('/esg/records', async (req, res) => {
   } catch (error) {
     esgRecord.azureAclStatus = 'Failed'
     esgRecord.azureAclError = error.message
+  }
+
+  try {
+    const serviceNowResult = await sendToServiceNow(esgRecord)
+    esgRecord.serviceNowStatus = serviceNowResult.status
+    esgRecord.serviceNowSysId = serviceNowResult.sysId
+    esgRecord.serviceNowRecordNumber = serviceNowResult.recordNumber
+    esgRecord.serviceNowResponse = serviceNowResult.response
+    esgRecord.serviceNowError = serviceNowResult.error || serviceNowResult.message
+  } catch (error) {
+    esgRecord.serviceNowStatus = 'Failed'
+    esgRecord.serviceNowError = error.message
   }
 
   esgRecords.push(esgRecord)
