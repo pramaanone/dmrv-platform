@@ -118,11 +118,13 @@ app.post('/esg/records', async (req, res) => {
     .digest('hex')
 
   const verificationUrl = `${frontendBaseUrl}/`
+  const qrCode = await QRCode.toDataURL(verificationUrl)
 
   const esgRecord = {
     ...esgPayload,
     hash: esgHash,
     verificationUrl,
+    qrCode,
     azureAclStatus: 'Pending'
   }
 
