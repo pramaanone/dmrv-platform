@@ -306,16 +306,39 @@ app.post('/upload', upload.single('image'), async (req, res) => {
     auditEntry.azureAclError = error.message
   }
 
+  try {
+    const serviceNowResult = await sendToServiceNow({
+      recordType: 'Satellite Image Hash',
+      projectName: 'Demo Factory dMRV Project',
+      hash: auditEntry.hash,
+      azureAclStatus: auditEntry.azureAclStatus,
+      verificationUrl: auditEntry.verificationUrl
+    })
+
+    auditEntry.serviceNowStatus = serviceNowResult.status
+    auditEntry.serviceNowSysId = serviceNowResult.sysId
+    auditEntry.serviceNowRecordNumber = serviceNowResult.recordNumber
+    auditEntry.serviceNowResponse = serviceNowResult.response
+    auditEntry.serviceNowError = serviceNowResult.error || serviceNowResult.message
+  } catch (error) {
+    auditEntry.serviceNowStatus = 'Failed'
+    auditEntry.serviceNowError = error.message
+  }
+
   auditLedger.push(auditEntry)
   saveLedger()
 
   res.json({
     message: 'Satellite image uploaded successfully',
+    record: auditEntry,
     file: req.file.filename,
     imageUrl: auditEntry.imageUrl,
     hash: fileHash,
     verificationUrl,
-    qrCode
+    qrCode,
+    azureAclStatus: auditEntry.azureAclStatus,
+    serviceNowStatus: auditEntry.serviceNowStatus,
+    serviceNowSysId: auditEntry.serviceNowSysId
   })
 })
 
