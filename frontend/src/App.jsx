@@ -203,19 +203,25 @@ function App() {
     doc.text(`Carbon Calculation: ${esg.carbonCalculation || `${esg.energyKwh} × ${esg.emissionFactor || 0.82} = ${esg.co2Kg} kg CO2e`}`, 20, 110)
     doc.text(`Estimated CO2 Emissions: ${esg.co2Kg} kg CO2e`, 20, 125)
     doc.text(`Water Usage: ${esg.waterUsageLiters} L`, 20, 140)
-    doc.text(`Waste Generated: ${esg.wasteGeneratedKg} kg`, 20, 110)
-    doc.text(`Renewable Energy: ${esg.renewableEnergyPercent}%`, 20, 125)
-    doc.text(`ESG Compliance Score: ${esg.complianceScore}/100`, 20, 140)
-    doc.text(`Source: ${esg.source}`, 20, 155)
+    doc.text(`Waste Generated: ${esg.wasteGeneratedKg} kg`, 20, 155)
+    doc.text(`Renewable Energy: ${esg.renewableEnergyPercent}%`, 20, 170)
+    doc.text(`ESG Compliance Score: ${esg.complianceScore}/100`, 20, 185)
+    doc.text(`Source: ${esg.source}`, 20, 200)
 
     if (esg.hash) {
-      doc.text(`ESG Hash: ${esg.hash}`, 20, 170)
-      doc.text(`Azure ACL Status: ${esg.azureAclStatus || 'Not Stored'}`, 20, 185)
-      doc.text(`Timestamp: ${new Date(esg.timestamp).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })} IST`, 20, 200)
+      doc.text('ESG Hash:', 20, 215)
+      const hashLines = doc.splitTextToSize(esg.hash || 'N/A', 170)
+      doc.text(hashLines, 20, 225)
+
+      doc.text(`Azure ACL Status: ${esg.azureAclStatus || 'Not Stored'}`, 20, 245)
+      doc.text(`ServiceNow Status: ${esg.serviceNowStatus || 'Not Sent'}`, 20, 260)
+      doc.text(`ServiceNow Sys ID: ${esg.serviceNowSysId || 'N/A'}`, 20, 275)
+      doc.text(`Timestamp: ${new Date(esg.timestamp).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })} IST`, 20, 290)
 
       if (esg.qrCode) {
-        doc.text('QR Verification:', 20, 215)
-        doc.addImage(esg.qrCode, 'PNG', 20, 220, 40, 40)
+        doc.addPage()
+        doc.text('QR Verification:', 20, 20)
+        doc.addImage(esg.qrCode, 'PNG', 20, 30, 50, 50)
       }
     }
 
