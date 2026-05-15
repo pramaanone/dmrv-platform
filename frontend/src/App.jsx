@@ -147,11 +147,16 @@ function App() {
     const energyKwh = latestEnergyReading ? Number(latestEnergyReading.value) : 1276.24
     const emissionFactor = 0.82
     const co2Kg = Number((energyKwh * emissionFactor).toFixed(2))
+    const carbonFormula = 'Energy Usage × Emission Factor'
+    const carbonCalculation = `${energyKwh} × ${emissionFactor} = ${co2Kg} kg CO2e`
 
     return {
       projectId: 1,
       projectName: 'Demo Factory dMRV Project',
       energyKwh,
+      emissionFactor,
+      carbonFormula,
+      carbonCalculation,
       co2Kg,
       waterUsageLiters: 18450,
       wasteGeneratedKg: 320,
@@ -193,8 +198,11 @@ function App() {
     doc.text('Report Type: ESG Sustainability Metrics Summary', 20, 35)
     doc.text(`Project: ${esg.projectName}`, 20, 50)
     doc.text(`Energy Usage: ${esg.energyKwh} kWh`, 20, 65)
-    doc.text(`Estimated CO2 Emissions: ${esg.co2Kg} kg CO2e`, 20, 80)
-    doc.text(`Water Usage: ${esg.waterUsageLiters} L`, 20, 95)
+    doc.text(`Emission Factor: ${esg.emissionFactor || 0.82} kg CO2/kWh`, 20, 80)
+    doc.text(`Carbon Formula: ${esg.carbonFormula || 'Energy Usage × Emission Factor'}`, 20, 95)
+    doc.text(`Carbon Calculation: ${esg.carbonCalculation || `${esg.energyKwh} × ${esg.emissionFactor || 0.82} = ${esg.co2Kg} kg CO2e`}`, 20, 110)
+    doc.text(`Estimated CO2 Emissions: ${esg.co2Kg} kg CO2e`, 20, 125)
+    doc.text(`Water Usage: ${esg.waterUsageLiters} L`, 20, 140)
     doc.text(`Waste Generated: ${esg.wasteGeneratedKg} kg`, 20, 110)
     doc.text(`Renewable Energy: ${esg.renewableEnergyPercent}%`, 20, 125)
     doc.text(`ESG Compliance Score: ${esg.complianceScore}/100`, 20, 140)
@@ -912,6 +920,9 @@ function App() {
                       <p><strong>ID:</strong> {record.id}</p>
                       <p><strong>Project:</strong> {record.projectName}</p>
                       <p><strong>Energy Usage:</strong> {record.energyKwh} kWh</p>
+                      <p><strong>Emission Factor:</strong> {record.emissionFactor || 0.82} kg CO2/kWh</p>
+                      <p><strong>Carbon Formula:</strong> {record.carbonFormula || 'Energy Usage × Emission Factor'}</p>
+                      <p><strong>Carbon Calculation:</strong> {record.carbonCalculation || `${record.energyKwh} × ${record.emissionFactor || 0.82} = ${record.co2Kg} kg CO2e`}</p>
                       <p><strong>CO2 Emissions:</strong> {record.co2Kg} kg CO2e</p>
                       <p><strong>Water Usage:</strong> {record.waterUsageLiters} L</p>
                       <p><strong>Waste Generated:</strong> {record.wasteGeneratedKg} kg</p>
